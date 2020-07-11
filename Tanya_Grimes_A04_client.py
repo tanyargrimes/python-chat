@@ -10,6 +10,8 @@ Created on Fri Jul 10 09:18:54 2020
     
 Code modified from:
 -    https://medium.com/swlh/lets-write-a-chat-app-in-python-f6783a9ac170
+-    https://realpython.com/python-gui-tkinter/
+-    http://effbot.org/zone/tkinter-scrollbar-patterns.htm#:~:text=to%20standard%20widgets.-,The%20Scrollbar%20Interface,the%20Text%20widget.
 """
 
 
@@ -18,7 +20,7 @@ Code modified from:
 
 from socket import AF_INET, socket, SOCK_STREAM, gethostname
 from threading import Thread
-import tkinter
+import tkinter as tk
 
 
 #------------------------------------------
@@ -36,82 +38,129 @@ print('Address:', ADDR)
 # Function Definitions
 
 def receive():
-    """Handles receiving of messages."""
+    """ Handles receiving of messages """
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
-            msg_list.insert(tkinter.END, msg)
+            lst_messages.insert(tk.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
 
 
-def send(event=None):  # event is passed by binders.
-    """Handles sending of messages."""
-    msg = my_msg.get()
-    my_msg.set("")  # Clears input field.
-    client_socket.send(bytes(msg, "utf8"))
-    if msg == "{quit}":
+def send(event = None):
+    """ Displays the current message and sends to server """
+    
+    # stores the current input text
+    msg_raw = msg_current.get()
+    
+    print(msg_raw)
+    
+    #lst_messages.insert(msg_raw)
+    
+    # clears the input box for re-use
+    msg_current.set('')
+    
+    # sends the message to the server
+    client_socket.send(bytes(msg_raw, 'utf8'))
+    
+    # allows user to type when to close the widget
+    if msg_raw == '{x}':
         client_socket.close()
-        top.quit()
+        gui_client.destroy()
 
 
-def on_closing(event=None):
-    """This function is to be called when the window is closed."""
-    my_msg.set("{quit}")
+def on_closing(event = None):
+    """ Executes on closing of the widget """
+    msg_current.set('{x}')
     send()
 
 
 #------------------------------------------
-# Variable Definitions
+# Tkinter GUI Definitions
 
-# Tkinter GUI widget
-top = tkinter.Tk()
-top.title("Chatter")
+gui_client = tk.Tk()
+gui_client.title("Chatter Box")
 
-# frame for holding list of messages
-messages_frame = tkinter.Frame(top)
+lbl_greeting = tk.Label(
+    text = 'Please follow instructions',
+    width = 50,
+    fg = 'purple'
+)
+lbl_greeting.pack()
 
-# to store messages to be sent
-my_msg = tkinter.StringVar()
+frm_messages = tk.Frame(
+    master = gui_client,
+    relief = tk.FLAT,
+    borderwidth = 5,
+    height = 200,
+    bg='#ccc'
+)
 
-# add 
-my_msg.set("Type your messages here.")
-scrollbar = tkinter.Scrollbar(messages_frame)  # To navigate through past messages.
+# allows the frame to grow as the widget expands
+frm_messages.pack(
+    fill = tk.BOTH,
+    expand = True
+)
 
-# Following will contain the messages.
-msg_list = tkinter.Listbox(messages_frame, height=15, width=50, yscrollcommand=scrollbar.set)
-scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
-msg_list.pack()
-messages_frame.pack()
+# scrolls the frame to see previous messages
+srl_scrollbar = tk.Scrollbar(
+    master = frm_messages
+)
 
-entry_field = tkinter.Entry(top, textvariable=my_msg)
-entry_field.bind("<Return>", send)
-entry_field.pack()
-send_button = tkinter.Button(top, text="Send", command=send)
-send_button.pack()
+# adds message list to frame and activates scrollbar
+lst_messages = tk.Listbox(
+    master = frm_messages, 
+    yscrollcommand = srl_scrollbar.set
+)
+lst_messages.pack(
+    side = tk.LEFT,
+    fill = tk.BOTH,
+    expand = True
+)
 
-top.protocol("WM_DELETE_WINDOW", on_closing)
+# add extra config after listbox is defined and load
+srl_scrollbar.config(command = lst_messages.yview)
+srl_scrollbar.pack(
+    side = tk.RIGHT,
+    fill = tk.Y
+)
 
-#----Now comes the sockets part----
-# #HOST = input('Enter host: ')
-# HOST = gethostname()
-# # PORT = input('Enter port: ')
-# # if not PORT:
-# #     PORT = 33000
-# # else:
-# #     PORT = int(PORT)
-# PORT = 33000
+# stores input as a string variable
+msg_current = tk.StringVar()
 
-# BUFSIZ = 1024
-# ADDR = (HOST, PORT)
-# print('Address:', ADDR)
+# add the input box
+input_box = tk.Entry(
+    width = 70,
+    textvariable = msg_current
+)
+input_box.bind("<Return>", send)
+input_box.pack(fill = tk.BOTH)
+
+# add send button
+btn_send = tk.Button(
+    text='Send',
+    width = 10,
+    height = 2,
+    bg = 'purple',
+    fg = 'white',
+    command = send
+)
+btn_send.pack()
+
+# calls to on_closing function when the widget X button is clicked
+gui_client.protocol("WM_DELETE_WINDOW", on_closing)
+
+
+#------------------------------------------
+# Open Client Widget
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 
-receive_thread = Thread(target=receive)
+receive_thread = Thread(target = receive)
 receive_thread.start()
-tkinter.mainloop()  # Starts GUI execution.
+
+# listens for events to prevent another window from opening
+gui_client.mainloop()
 
 
