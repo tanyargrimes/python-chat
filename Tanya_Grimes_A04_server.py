@@ -17,8 +17,9 @@ Code modified from:
 #------------------------------------------
 # Library Imports
 
-from socket import AF_INET, socket, SOCK_STREAM
+from socket import AF_INET, socket, SOCK_STREAM, gethostname
 from threading import Thread
+import datetime as dt
 
 
 #------------------------------------------
@@ -28,39 +29,59 @@ def accept_incoming_connections():
     """Sets up handling for incoming clients."""
     while True:
         client, client_address = SERVER.accept()
+        print('client', client)
         print("%s:%s has connected." % client_address)
-        client.send(bytes("Greetings from the cave! Now type your name and press enter!", "utf8"))
+        client.send(bytes("Welcome to Chatter Box! Enter your name and hit Enter to join the chat", "utf8"))
         addresses[client] = client_address
-        Thread(target=handle_client, args=(client,)).start()
+        Thread(target = handle_client, args = (client,)).start()
 
 
 def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
 
-    name = client.recv(BUFSIZ).decode("utf8")
-    welcome = 'Welcome %s! If you ever want to quit, type {quit} to exit.' % name
+    name = (client.recv(BUFSIZ).decode("utf8")).strip()
+    print('name on start',name)
+    # provide a default name if the name is empty
+    if len(name) == 0:
+        name = 'Anonymous'
+    
+    # set to uppercase
+    #name = name.upper()
+    
+    welcome = 'Welcome %s! If you ever want to quit, type {x} to exit.' % name
     client.send(bytes(welcome, "utf8"))
-    msg = "%s has joined the chat!" % name
-    broadcast(bytes(msg, "utf8"))
+    print(welcome)
+    
     clients[client] = name
+    print('clients length',len(clients), clients)
+    
+    msg = "{0} has just been connected. Total connections is {1}.".format(name, len(clients))
+    broadcast(bytes(msg, "utf8"))
+    #clients[client] = name
 
     while True:
         msg = client.recv(BUFSIZ)
-        if msg != bytes("{quit}", "utf8"):
-            broadcast(msg, name+": ")
+        print('msg - server', msg)
+        if msg != bytes("{x}", "utf8"):
+            
+            # set prefix to include date and time
+            dte_now = (dt.datetime.now()).strftime('%Y-%m-%d %H:%M')
+            prefix = '[ ' + str(dte_now) + ' ] --- ' + name + ': '
+            broadcast(msg, prefix)
         else:
-            client.send(bytes("{quit}", "utf8"))
-            client.close()
             del clients[client]
+            print('clients length on close',len(clients))
+            #client.send(bytes("{x}", "utf8"))
+            client.close()
+            # del clients[client]
             broadcast(bytes("%s has left the chat." % name, "utf8"))
             break
 
 
 def broadcast(msg, prefix=""):  # prefix is for name identification.
     """Broadcasts a message to all the clients."""
-
     for sock in clients:
-        sock.send(bytes(prefix, "utf8")+msg)
+        sock.send(bytes(prefix, "utf8") + msg)
 
 
 #------------------------------------------
@@ -69,7 +90,7 @@ def broadcast(msg, prefix=""):  # prefix is for name identification.
 clients = {}
 addresses = {}
 
-HOST = ''
+HOST = gethostname()
 PORT = 33000
 BUFSIZ = 1024
 ADDR = (HOST, PORT)
