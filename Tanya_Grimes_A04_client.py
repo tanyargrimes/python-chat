@@ -18,7 +18,7 @@ Code modified from:
 #------------------------------------------
 # Library Imports
 
-from socket import AF_INET, socket, SOCK_STREAM, gethostname
+from socket import AF_INET, socket, SOCK_STREAM, gethostname, gethostbyname
 from threading import Thread
 import tkinter as tk
 
@@ -26,12 +26,21 @@ import tkinter as tk
 #------------------------------------------
 # Constant Definitions
 
-HOST = gethostname()
-#HOST = '127.0.0.1'
-PORT = 33000
+# will be an input once more
+#SHOST = '192.168.0.15'
+#SHOST = '172.18.64.129' # Ethernet IP for server
+SHOST = '192.168.0.11' #Wifi IP for server
+#SHOST = '72.137.51.162' # Public IP
+#SHOST = '0.0.0.0'
+SPORT = 33000
+#CHOST = gethostname()
+CHOST = '192.168.0.11' # Wifi IP for client
+#CHOST = '172.18.64.129' # Ethernet for client
+CPORT = 12348
 BUFSIZ = 1024
-ADDR = (HOST, PORT)
-print('Address:', ADDR)
+SADDR = (SHOST, SPORT)
+CADDR = (CHOST, CPORT)
+print('Address:', SADDR, CADDR)
 
 
 #------------------------------------------
@@ -55,7 +64,7 @@ def send(event = None):
     
     print(msg_raw)
     
-    #lst_messages.insert(msg_raw)
+    #lst_messages.insert(tk.END, msg_raw)
     
     # clears the input box for re-use
     msg_current.set('')
@@ -155,7 +164,8 @@ gui_client.protocol("WM_DELETE_WINDOW", on_closing)
 # Open Client Widget
 
 client_socket = socket(AF_INET, SOCK_STREAM)
-client_socket.connect(ADDR)
+client_socket.bind(CADDR)
+client_socket.connect(SADDR)
 
 receive_thread = Thread(target = receive)
 receive_thread.start()

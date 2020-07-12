@@ -17,7 +17,7 @@ Code modified from:
 #------------------------------------------
 # Library Imports
 
-from socket import AF_INET, socket, SOCK_STREAM, gethostname
+from socket import AF_INET, socket, SOCK_STREAM, gethostname, gethostbyname
 from threading import Thread
 import datetime as dt
 
@@ -89,8 +89,11 @@ def broadcast(msg, prefix=""):  # prefix is for name identification.
         
 clients = {}
 addresses = {}
-
-HOST = gethostname()
+#HOST = '0.0.0.0'
+#HOST = '' # accepts connections on all available IPv4 connections
+#HOST = '72.137.51.162' # Public IP
+HOST = '192.168.0.11' # Wifi IP
+#HOST = gethostbyname(gethostname()) # Ethernet IP - only works for local clients
 PORT = 33000
 BUFSIZ = 1024
 ADDR = (HOST, PORT)
@@ -102,7 +105,7 @@ SERVER.bind(ADDR)
 if __name__ == "__main__":
     SERVER.listen(5)
     print("Waiting for connection...")
-    ACCEPT_THREAD = Thread(target=accept_incoming_connections)
+    ACCEPT_THREAD = Thread(target = accept_incoming_connections)
     ACCEPT_THREAD.start()
     ACCEPT_THREAD.join()
     SERVER.close()
