@@ -52,15 +52,15 @@ def receive():
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
             print(msg)
-            if msg[0:2] == 'c-':
-                lbl_connum.set('Active: ' + msg[2:])
-            else:
-                # add messages to end of the list
-                lst_messages.insert(tk.END, msg)
-                lst_messages.insert(tk.END, '')
-                
-                # set the vertical view to see the end of the list
-                lst_messages.yview(tk.END)
+            # if msg[0:2] == 'c-':
+            #     lbl_connum.set('Active: ' + msg[2:])
+            # else:
+            # add messages to end of the list
+            lst_messages.insert(tk.END, msg)
+            lst_messages.insert(tk.END, '')
+            
+            # set the vertical view to see the end of the list
+            lst_messages.yview(tk.END)
             
         except OSError:  
             # Possibly client has left the chat.
@@ -99,47 +99,50 @@ def on_closing(event = None):
 gui_client = tk.Tk()
 gui_client.title("Chatter Box")
 
-frm_title = tk.Frame(
-    master = gui_client,
-    relief = tk.FLAT
-)
-frm_title.pack(
-    fill = tk.BOTH,
-    #expand = True
-)
+# frm_title = tk.Frame(
+#     master = gui_client,
+#     relief = tk.FLAT
+# )
+# frm_title.pack(
+#     fill = tk.BOTH
+# )
+
+# lbl_greeting = tk.Label(
+#     master = frm_title,
+#     text = 'Welcome to Chatter Box!'.upper(),
+#     fg = 'green'
+# )
+# lbl_greeting.pack(
+#     side = tk.LEFT,
+#     fill = tk.BOTH,
+#     anchor = tk.W,
+#     expand = True
+# )
+
+# # stores label text as a string variable
+# lbl_connum = tk.StringVar()
+
+# lbl_connections = tk.Label(
+#      master = frm_title,
+#     text = '',
+#     width = 10,
+#     fg = 'green',
+#     padx = 30,
+#     textvariable = lbl_connum
+# )
+# lbl_connections.pack(
+#     side = tk.RIGHT,
+#     fill = tk.Y,
+#     anchor = tk.E,
+#     expand = True
+# )
 
 lbl_greeting = tk.Label(
-    master = frm_title,
     text = 'Welcome to Chatter Box!'.upper(),
-    #width = 60,
     fg = 'green',
-    #bg='grey',
+    width = 70,
 )
-lbl_greeting.pack(
-    side = tk.LEFT,
-    fill = tk.BOTH,
-    anchor = tk.W,
-    expand = True
-)
-
-# stores label text as a string variable
-lbl_connum = tk.StringVar()
-
-lbl_connections = tk.Label(
-     master = frm_title,
-    text = '',
-    width = 10,
-    fg = 'green',
-    #bg='purple',
-    padx = 30,
-    textvariable = lbl_connum
-)
-lbl_connections.pack(
-    side = tk.RIGHT,
-    fill = tk.Y,
-    anchor = tk.E,
-    expand = True
-)
+lbl_greeting.pack()
 
 frm_messages = tk.Frame(
     master = gui_client,
@@ -162,6 +165,7 @@ srl_scrollbar = tk.Scrollbar(
 lst_messages = tk.Listbox(
     master = frm_messages,
     height = 20,
+    bg = '#eee',
     yscrollcommand = srl_scrollbar.set
 )
 lst_messages.pack(
@@ -195,7 +199,7 @@ input_box.pack(
 # add send button
 btn_send = tk.Button(
     text='Send',
-    width = 7,
+    width = 9,
     height = 2,
     bg = 'green',
     fg = 'white',

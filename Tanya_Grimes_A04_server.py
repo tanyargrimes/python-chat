@@ -29,65 +29,65 @@ def accept_incoming_connections():
     """ Sets up handling for incoming clients. """
     while True:
         client, client_address = SERVER.accept()
-        #print('client_address', client_address)
-        
-        client_name = client_address[0]
-        
         #print("%s:%s has connected." % client_address)
         client.send(bytes('Enter your name to join the chat.', 'utf8'))
         addresses[client] = client_address
-        Thread(target = handle_client, args = (client,client_name)).start()
+        Thread(target = handle_client, args = (client,client_address)).start()
 
 
-def handle_client(client, client_name):
+def handle_client(client, client_address):
     """ Handles a single client connection. """
-
-    name = (client.recv(BUFSIZ).decode("utf8")).strip()
-    #print('name on start',name)
+    client_name = client_address[0]
+    user_name = (client.recv(BUFSIZ).decode("utf8")).strip()
+    #print('name on start',user_name)
     # provide a default name if the name is empty
-    if len(name) == 0:
-        name = 'Anonymous'
+    if len(user_name) == 0:
+        user_name = 'Anonymous'
     
     # set name to uppercase
-    #name = name.upper()
+    #user_name = user_name.upper()
     
-    welcome = 'Welcome %s! If you ever want to quit, type {x} to exit or click the X button.' % name
+    welcome = 'Welcome %s! If you ever want to quit, type {x} to exit.' % user_name
     
     # sends to newly joined client only
     client.send(bytes(welcome, "utf8"))
     print(welcome)
     
-    clients[client] = name
+    # adds new client by name to keeps track of all active clients
+    clients[client] = user_name
     
-    print('client_name', client_name)
+    print('clients', clients)
     msg = '{0} has just been connected. Total connections is {1}.'.format(client_name, len(clients))
     
-    # broadcast to everyone except newly joined client.
-    # Client already received a welcome message
     broadcast(bytes(msg, 'utf8'))
     
+    #print('wait...')
+    
     # update active connections display
-    broadcast(bytes('c-' + str(len(clients)), 'utf8'))
+    #broadcast(bytes('c-' + str(len(clients)), 'utf8'))
 
     while True:
         msg = client.recv(BUFSIZ)
-        print('msg - server', msg)
+        
+        #print('msg - server', msg)
         if msg != bytes("{x}", "utf8"):
             # set prefix to include date and time
             dte_now = (dt.datetime.now()).strftime('%Y-%m-%d %H:%M')
-            prefix = '[ ' + str(dte_now) + ' ]     ' + name + ':  '
+            prefix = '[ ' + str(dte_now) + ' ]     ' + user_name + ':  '
             broadcast(msg, prefix)
         else:
+            # deletes exiting client to keeps track of all active clients accurately
             del clients[client]
             #print('clients length on close',len(clients))
             # update active connections display
-            broadcast(bytes('c-' + str(len(clients)), 'utf8'))
-            
+            #broadcast(bytes('c-' + str(len(clients)), 'utf8'))
+            client.send(bytes("{x}", "utf8"))
             client.close()
             
-            broadcast(bytes("%s has left the chat." % name, "utf8"))
+            broadcast(bytes("%s has left the chat." % user_name, "utf8"))
             
-            
+            msg = '{0} has disconnected. Total connections is {1}.'.format(client_name, len(clients))
+            broadcast(bytes(msg, 'utf8'))
             break
 
 
