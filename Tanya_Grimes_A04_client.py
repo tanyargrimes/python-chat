@@ -51,8 +51,19 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
-            lst_messages.insert(tk.END, msg)
-        except OSError:  # Possibly client has left the chat.
+            print(msg)
+            if msg[0:2] == 'c-':
+                lbl_connum.set('Active: ' + msg[2:])
+            else:
+                # add messages to end of the list
+                lst_messages.insert(tk.END, msg)
+                lst_messages.insert(tk.END, '')
+                
+                # set the vertical view to see the end of the list
+                lst_messages.yview(tk.END)
+            
+        except OSError:  
+            # Possibly client has left the chat.
             break
 
 
@@ -63,8 +74,6 @@ def send(event = None):
     msg_raw = msg_current.get()
     
     print(msg_raw)
-    
-    #lst_messages.insert(tk.END, msg_raw)
     
     # clears the input box for re-use
     msg_current.set('')
@@ -90,19 +99,52 @@ def on_closing(event = None):
 gui_client = tk.Tk()
 gui_client.title("Chatter Box")
 
-lbl_greeting = tk.Label(
-    text = 'Please follow instructions',
-    width = 50,
-    fg = 'purple'
+frm_title = tk.Frame(
+    master = gui_client,
+    relief = tk.FLAT
 )
-lbl_greeting.pack()
+frm_title.pack(
+    fill = tk.BOTH,
+    #expand = True
+)
+
+lbl_greeting = tk.Label(
+    master = frm_title,
+    text = 'Welcome to Chatter Box!'.upper(),
+    #width = 60,
+    fg = 'green',
+    #bg='grey',
+)
+lbl_greeting.pack(
+    side = tk.LEFT,
+    fill = tk.BOTH,
+    anchor = tk.W,
+    expand = True
+)
+
+# stores label text as a string variable
+lbl_connum = tk.StringVar()
+
+lbl_connections = tk.Label(
+     master = frm_title,
+    text = '',
+    width = 10,
+    fg = 'green',
+    #bg='purple',
+    padx = 30,
+    textvariable = lbl_connum
+)
+lbl_connections.pack(
+    side = tk.RIGHT,
+    fill = tk.Y,
+    anchor = tk.E,
+    expand = True
+)
 
 frm_messages = tk.Frame(
     master = gui_client,
     relief = tk.FLAT,
-    borderwidth = 5,
-    height = 200,
-    bg='#ccc'
+    borderwidth = 5
 )
 
 # allows the frame to grow as the widget expands
@@ -118,7 +160,8 @@ srl_scrollbar = tk.Scrollbar(
 
 # adds message list to frame and activates scrollbar
 lst_messages = tk.Listbox(
-    master = frm_messages, 
+    master = frm_messages,
+    height = 20,
     yscrollcommand = srl_scrollbar.set
 )
 lst_messages.pack(
@@ -139,22 +182,28 @@ msg_current = tk.StringVar()
 
 # add the input box
 input_box = tk.Entry(
-    width = 70,
+    width = 80,
     textvariable = msg_current
 )
 input_box.bind("<Return>", send)
-input_box.pack(fill = tk.BOTH)
+input_box.pack(
+    side = tk.LEFT,
+    fill = tk.BOTH,
+    expand = True
+)
 
 # add send button
 btn_send = tk.Button(
     text='Send',
-    width = 10,
+    width = 7,
     height = 2,
-    bg = 'purple',
+    bg = 'green',
     fg = 'white',
     command = send
 )
-btn_send.pack()
+btn_send.pack(
+    side = tk.RIGHT
+)
 
 # calls to on_closing function when the widget X button is clicked
 gui_client.protocol("WM_DELETE_WINDOW", on_closing)
