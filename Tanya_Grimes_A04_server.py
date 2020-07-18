@@ -23,6 +23,7 @@ Code modified from:
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import datetime as dt
+import time
 
 
 #------------------------------------------
@@ -134,11 +135,11 @@ def manage_client(client, client_address):
     client_name = client_address[0]
     user_name = (client.recv(BUFFER_SIZE).decode('utf8')).strip()
     
-    # provide a default name if the name is empty
+    # provides a default name if the name is empty
     if len(user_name) == 0:
         user_name = 'Anonymous'
     
-    # display welcome message with client's user name
+    # displays welcome message with client's user name
     welcome_msg = 'Welcome %s! If you ever want to quit, type {x} to exit.' % user_name
     
     # sends welcome message to new client only
@@ -152,6 +153,14 @@ def manage_client(client, client_address):
     
     # broadcasts connection message to all clients
     broadcast(bytes(connection_msg, 'utf8'))
+    
+    # sleeps for 1/4 second to allow previous broadcast to finish
+    # to prevent concatenation
+    time.sleep(0.25)
+    
+    # broadcasts to all available clients that a user has joined
+    user_join_msg = '%s has joined the chat.' % user_name
+    broadcast(bytes(user_join_msg, 'utf8'))
     
     # keep listening for user input
     while True:
