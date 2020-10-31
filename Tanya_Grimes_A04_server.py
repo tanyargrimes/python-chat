@@ -1,16 +1,11 @@
 # !/usr/local/bin/python
 # -*- coding: utf-8 -*-
 '''
-PROG8420 - Programming for Big Data
-
-Assignment 04 Server
+Chat Server
 
 Created on Fri Jul 10 09:15:30 2020
 
-@authors: 
-    Gurjap Singh
-    Jaibir Singh
-    Tanya Grimes
+@authors: Tanya Grimes
 
 Code modified from:
     https://medium.com/swlh/lets-write-a-chat-app-in-python-f6783a9ac170
